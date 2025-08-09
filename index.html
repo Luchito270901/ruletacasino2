@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ruleta Europea Premium</title>
+<style>
+    body {
+        background-color: #064420;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+    canvas {
+        background-color: transparent;
+    }
+</style>
+</head>
+<body>
+<canvas id="ruleta" width="700" height="700"></canvas>
+<script>
+const canvas = document.getElementById("ruleta");
+const ctx = canvas.getContext("2d");
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = 320;
+
+const numeros = [
+    0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6,
+    27, 13, 36, 11, 30, 8, 23, 10, 5, 24,
+    16, 33, 1, 20, 14, 31, 9, 22, 18, 29,
+    7, 28, 12, 35, 3, 26
+];
+const colores = numeros.map(n => n === 0 ? "green" : 
+    [32,19,21,25,34,27,36,30,23,5,16,1,14,9,18,7,12,3].includes(n) ? "red" : "black"
+);
+
+let anguloRuleta = 0;
+let anguloBola = 0;
+let girando = false;
+let velocidadRuleta = 0;
+let velocidadBola = 0;
+
+function dibujarRuleta() {
+    const anguloCasilla = (2 * Math.PI) / numeros.length;
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 10, 0, 2 * Math.PI);
+    ctx.fillStyle = "#DAA520";
+    ctx.fill();
+
+    for (let i = 0; i < numeros.length; i++) {
+        const angInicio = anguloRuleta + i * anguloCasilla;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, angInicio, angInicio + anguloCasilla);
+        ctx.fillStyle = colores[i];
+        ctx.fill();
+        ctx.strokeStyle = "white";
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(angInicio + anguloCasilla / 2);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        ctx.fillText(numeros[i], radius - 25, 0);
+        ctx.restore();
+    }
+
+    const innerRadius = radius - 50;
+    for (let i = 0; i < numeros.length; i++) {
+        const angInicio = anguloRuleta + i * anguloCasilla;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius, angInicio, angInicio + anguloCasilla);
+        ctx.arc(centerX, centerY, innerRadius - 20, angInicio + anguloCasilla, angInicio, true);
+        ctx.closePath();
+        ctx.fillStyle = colores[i];
+        ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+    ctx.fillStyle = "#FFD700";
+    ctx.fill();
+    ctx.strokeStyle = "#B8860B";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
+function dibujarBola() {
+    const bolaRadius = radius - 35;
+    const x = centerX + bolaRadius * Math.cos(anguloBola);
+    const y = centerY + bolaRadius * Math.sin(anguloBola);
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.strokeStyle = "black";
+    ctx.stroke();
+}
+
+function animar() {
+    if (girando) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        dibujarRuleta();
+        dibujarBola();
+        anguloRuleta += velocidadRuleta;
+        anguloBola -= velocidadBola;
+        velocidadRuleta *= 0.984; 
+        velocidadBola *= 0.982; 
+
+        if (velocidadRuleta < 0.002 && velocidadBola < 0.002) {
+            girando = false;
+        }
+        requestAnimationFrame(animar);
+    }
+}
+
+canvas.addEventListener("click", () => {
+    if (!girando) {
+        girando = true;
+        velocidadRuleta = 0.2;
+        velocidadBola = 0.3;
+        animar();
+    }
+});
+
+dibujarRuleta();
+</script>
+</body>
+</html>
